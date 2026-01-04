@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:developers.cloudflare.com)",
+      "Bash(python:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm install)",
+      "Bash(npm run dev:*)",
+      "Bash(curl:*)",
+      "Bash(cat:*)",
+      "Bash(docker run:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(python3 -c \"\nfrom rlm.environments.cloudflare_repl import CloudflareREPL\n\nrepl = CloudflareREPL\\(worker_url=''http://localhost:8787''\\)\nprint\\(''Session ID:'', repl.session_id\\)\n\n# Test simple code\nresult = repl.execute_code\\(''print\\(2+2\\)''\\)\nprint\\(''stdout:'', repr\\(result.stdout\\)\\)\nprint\\(''stderr:'', repr\\(result.stderr\\)\\)\nprint\\(''locals:'', result.locals\\)\n\")",
+      "Bash(python3:*)",
+      "Bash(uv pip install:*)",
+      "Bash(echo $OPENAI_API_KEY)",
+      "Bash(echo $ANTHROPIC_API_KEY:0:10)",
+      "Bash(op run:*)",
+      "WebFetch(domain:blog.cloudflare.com)",
+      "Bash(git remote:*)",
+      "Bash(gh repo fork:*)",
+      "Bash(git push:*)",
+      "Bash(gh repo create:*)"
+    ]
+  }
+}

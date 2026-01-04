@@ -36,6 +36,7 @@ class CloudflareREPL(IsolatedEnv):
     def __init__(
         self,
         worker_url: str,
+        api_key: str | None = None,
         session_id: str | None = None,
         timeout: int = 300,
         poll_interval: float = 0.1,
@@ -49,6 +50,7 @@ class CloudflareREPL(IsolatedEnv):
 
         Args:
             worker_url: URL of the deployed Cloudflare Worker (e.g., https://rlm-sandbox.example.workers.dev)
+            api_key: Optional API key for authentication (required if worker has API_KEY configured)
             session_id: Optional session ID to reuse. If not provided, a new session is created.
             timeout: Request timeout in seconds
             poll_interval: How often to poll for pending LLM requests (seconds)
@@ -59,6 +61,7 @@ class CloudflareREPL(IsolatedEnv):
         super().__init__(**kwargs)
 
         self.worker_url = worker_url.rstrip("/")
+        self.api_key = api_key
         self.session_id = session_id or str(uuid.uuid4())
         self.timeout = timeout
         self.poll_interval = poll_interval
@@ -68,6 +71,11 @@ class CloudflareREPL(IsolatedEnv):
         self.poller_stop = threading.Event()
         self.pending_llm_calls: list[RLMChatCompletion] = []
         self._calls_lock = threading.Lock()
+
+        # Build auth headers
+        self._headers: dict[str, str] = {}
+        if self.api_key:
+            self._headers["Authorization"] = f"Bearer {self.api_key}"
 
         self.setup()
 
@@ -83,6 +91,7 @@ class CloudflareREPL(IsolatedEnv):
             response = requests.post(
                 f"{self.worker_url}/session",
                 json={"session_id": self.session_id},
+                headers=self._headers,
                 timeout=self.timeout,
             )
             response.raise_for_status()
@@ -104,6 +113,7 @@ class CloudflareREPL(IsolatedEnv):
                 resp = requests.get(
                     f"{self.worker_url}/pending",
                     params={"session_id": self.session_id},
+                    headers=self._headers,
                     timeout=5,
                 )
                 pending = resp.json().get("pending", [])
@@ -123,6 +133,7 @@ class CloudflareREPL(IsolatedEnv):
                             "id": request_id,
                             "response": response,
                         },
+                        headers=self._headers,
                         timeout=10,
                     )
 
@@ -206,6 +217,7 @@ class CloudflareREPL(IsolatedEnv):
                     "session_id": self.session_id,
                     "code": code,
                 },
+                headers=self._headers,
                 timeout=self.timeout,
             )
             response.raise_for_status()
@@ -247,6 +259,7 @@ class CloudflareREPL(IsolatedEnv):
             requests.delete(
                 f"{self.worker_url}/session",
                 json={"session_id": self.session_id},
+                headers=self._headers,
                 timeout=10,
             )
         except requests.RequestException:
